@@ -28,4 +28,26 @@ There are only six event types. Each is a subclass of `Event`, which has a `conn
 
 ## Serialization
 
-TODO
+An implementation of the `Serializer` interface converts an enqueued object to a sequence of bytes that are sent. An implementation of the `Deserializer` interface converts a sequence of bytes that are received back into an object. Each operation is the inverse of the other.
+
+`Converter` is an interface for an object that serves as a factory for `Serializer` and `Deserializer` instances. By passing a `Converter` instance to the constructor of the `Connector`, you completely specify the wire protocol that the `Connector` uses.
+
+The `Primitives` class in `converters.py` has the class variables `BOOL_CONVERTER`, `INT_CONVERTER`, `FLOAT_CONVERTER`, and `STRING_CONVERTER`, which are simple `Converter` implementations for the primitive types of booleans, integers, floating point values, and strings. If you are not sending one of these primitive types, you may need to define your own `Serializer` and `Deserializer` implementations as follows.
+
+The `Serializer` interface defines a single method `get_bytes` that is called whenever the `Connector` instance is able to send more data to the endpoint. It returns one of the following values:
+
+* If the empty string, then the object enqueued has been fully serialized and a new `Serializer` instance will be created for the next enqueued object.
+
+* If a non-empty string, it is used as the next bytes to send over the connection.
+
+* If the `WAIT_FOR_CALLBACK` sentinel value, the serializer may have more bytes for sending, but not immediately. The `Connector` instance will only call the `get_bytes` method again after the the serializer instance calls the given callback parameter. This is typically done if the serializer needs time to read the bytes from some slow resource.
+
+
+The `Deserializer` interface defines a single method `put_bytes` that is called whenever the `Connector` instance receives data from an endpoint. This method always returns a pair of values. The first value is always a suffix of the given data which was not used, and is potentially empty if the `Deserializer` instance consumes all the bytes. The second value is one of the following values:
+
+* If the `DONE` sentinel value, then the object has been fully deserialized and a new `Deserializer` instance will be created for the unused suffix of bytes or whatever bytes are received next.
+
+* If the `WAIT_FOR_MORE` sentinel value, the `Connector` instance will again call the `put_bytes` method, but only when additional bytes have been received from the endpoint. This is typically done if the bytes passed in do not even comprise a small, singular value of data that can be deserialized.
+
+* If the `WAIT_FOR_CALLBACK` sentinel value, the `Connector` instance will only call the `put_bytes` method again after the deserializer instance calls the given callback parameter. This is typically done if the deserializer needs time to write the bytes recently consumed to some slow resource.
+
