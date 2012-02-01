@@ -26,13 +26,17 @@ There are only six event types. Each is a subclass of `Event`, which has a `conn
 
 * `RejectedMessageEvent` is returned after the client attempts to enqueue a message for a connection that is either in the process of disconnecting or is already disconnected. Note that this event will not be generated if a message is enqueued for a connection that is still connecting to a remote endpoint: If connecting succeeds, the enqueued message will be sent, but if connecting fails, a `FinishConnectEvent` will be created with the enqueued message returned by its `queued` accessor.
 
-## Serialization
+## Serialization and Deserialization
 
 An implementation of the `Serializer` interface converts an enqueued object to a sequence of bytes that are sent. An implementation of the `Deserializer` interface converts a sequence of bytes that are received back into an object. Each operation is the inverse of the other.
+
+### Converters
 
 `Converter` is an interface for an object that serves as a factory for `Serializer` and `Deserializer` instances. By passing a `Converter` instance to the constructor of the `Connector`, you completely specify the wire protocol that the `Connector` uses.
 
 The `Primitives` class in `converters.py` has the class variables `BOOL_CONVERTER`, `INT_CONVERTER`, `FLOAT_CONVERTER`, and `STRING_CONVERTER`, which are simple `Converter` implementations for the primitive types of booleans, integers, floating point values, and strings. If you are not sending one of these primitive types, you may need to define your own `Serializer` and `Deserializer` implementations as follows.
+
+### Serializers
 
 The `Serializer` interface defines a single method `get_bytes` that is called whenever the `Connector` instance is able to send more data to the endpoint. It returns one of the following values:
 
@@ -42,6 +46,7 @@ The `Serializer` interface defines a single method `get_bytes` that is called wh
 
 * If the `WAIT_FOR_CALLBACK` sentinel value, the serializer may have more bytes for sending, but not immediately. The `Connector` instance will only call the `get_bytes` method again after the the serializer instance calls the given callback parameter. This is typically done if the serializer needs time to read the bytes from some slow resource.
 
+### Deserializers
 
 The `Deserializer` interface defines a single method `put_bytes` that is called whenever the `Connector` instance receives data from an endpoint. This method always returns a pair of values. The first value is always a suffix of the given data which was not used, and is potentially empty if the `Deserializer` instance consumes all the bytes. The second value is one of the following values:
 
