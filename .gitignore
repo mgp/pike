@@ -1,0 +1,14 @@
+# git conflicts
+*.orig
+
+# osx
+.DS_Store
+profile
+
+# python
+*.pyc
+
+# misc
+.svn
+.*.swp
+
