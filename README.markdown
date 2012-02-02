@@ -10,6 +10,33 @@ Below, we use _endpoint_ as a synonym for the pairing of a port and an IP addres
 
 Instances of the `Connection` class are opaque identifiers for the underlying sockets that are connected to endpoints.
 
+## Connectors
+
+
+The `Connector` interface is the hub through which connections are managed and data is both sent and received. The `TornadoConnector` implementation, found in `tornado_connector.py`, is built atop the I/O loop of the venerable Tornado web server. Alternate implementations may be included with Pike in the future.
+
+### Starting and Stopping
+
+The `run` method of a `Connector` instance must be called before it can be used. After this method returns, new connections to endpoints may be created and data may be sent and received over them using the methods in the following sections. If a port parameter was passed to the constructor of the connector, it begins listening for incoming connections on that port.
+
+The `shutdown` method begins closing all connections to endpoints. After calling this method, the connector will reject any attempt to enqueue a message by returning it as part of a `RejectedMessageEvent`, described in **Events**. Additionally, the connector will refuse new incoming connections if it was listening on some port, and immediately terminate any connections that are still being established or for which the TCP handshake has not completed.
+
+The `shutdown` method has the three optional parameters `now`, `finish_messages`, and `finish_queues`, exactly one of which must be passed in as `True`:
+
+* If `now` is `True`, each connection is closed immediately. For each connection, any partially sent message and all enqueued messages are returned in a `FinishDisconnectEvent`, described in **Events**.
+
+* If `finish_messages` is `True`, each connection is closed only after any partially sent message is sent in its entirety. All messages enqueued behind it are returned in a `FinishDisconnectEvent`.
+
+* If `finish_queues` is `True`, each connection is closed only after any partially sent message is sent in its entirety and all enqueued messages are also sent. After this all happens, a `FinishDisconnectEvent` is returned.
+
+### Connection Management
+
+TODO
+
+### Sending and Receiving Data
+
+TODO
+
 ## Events
 
 There are only six event types. Each is a subclass of `Event`, which has a `connection` accessor that returns the associated `Connection` instance. 

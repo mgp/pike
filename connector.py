@@ -385,13 +385,13 @@ class Connector:
     connection, any partially sent message and all queued messages are returned
     in a FinishDisconnectEvent.
 
-    If finish_message is True, each connection is disconnected after any
+    If finish_messages is True, each connection is disconnected after any
     partially sent message is sent in is entirety. All queued messages are
     returned in a FinishDisconnectEvent.
 
-    If finish_queue is True, each connection is disconnected after any partially
-    sent message is sent in its entirety, and all queued messages are also sent.
-    A FinishDisconnectEvent is returned.
+    If finish_queues is True, each connection is disconnected after any
+    partially sent message is sent in its entirety, and all queued messages are
+    also sent. A FinishDisconnectEvent is returned.
 
     Regardless of which option is chosen, after this method is invoked, each
     message later enqueued by calling send will be returned in a
